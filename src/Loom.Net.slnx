@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Loom.Net.AspNetCore/Loom.Net.AspNetCore.csproj" />
+  <Project Path="Loom.Net.Samples.Alpha/Loom.Net.Samples.Alpha.csproj" />
+</Solution>

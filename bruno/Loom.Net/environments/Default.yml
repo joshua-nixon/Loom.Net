@@ -1,0 +1,8 @@
+name: Default
+variables:
+  - name: host
+    value: http://localhost:5237
+    description: ""
+  - name: route-prefix
+    value: loom
+    description: ""
