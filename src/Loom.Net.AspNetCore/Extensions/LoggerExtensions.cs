@@ -10,5 +10,11 @@ namespace Loom.Net.AspNetCore.Extensions
             Message = "Matched route '{RequestPath}' to '{DownstreamUri}'"
         )]
         public static partial void LogMatchedRoute(this ILogger logger, PathString requestPath, Uri downstreamUri);
+
+        [LoggerMessage(
+            Level = LogLevel.Information,
+            Message = "No matching route found for '{RequestPath}'"
+        )]
+        public static partial void LogUnmatchedRoute(this ILogger logger, PathString requestPath);
     }
 }

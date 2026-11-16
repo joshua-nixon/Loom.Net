@@ -1,4 +1,5 @@
-﻿using Loom.Net.AspNetCore.Configuration;
+﻿using System.Diagnostics.CodeAnalysis;
+using Loom.Net.AspNetCore.Configuration;
 using Loom.Net.AspNetCore.Exceptions;
 using Loom.Net.AspNetCore.Extensions;
 using Loom.Net.AspNetCore.Models;
@@ -11,19 +12,26 @@ namespace Loom.Net.AspNetCore.Services
         LoomAspNetCoreConfiguration configuration,
         ILogger<LoomDownstreamMatcher> logger)
     {
-        public LoomMatchedDownstreamRoute GetDownstream(HttpContext context)
+        public bool TryGetDownstream(HttpContext context, [NotNullWhen(true)] out LoomMatchedDownstreamRoute? route)
         {
-            var loomRoute = GetLoomRoute(context);
+            if (!TryGetLoomRoute(context, out var loomRoute))
+            {
+                route = default;
 
-            var downstream = CreateMatchedDownstreamRoute(context, loomRoute);
+                return false;
+            }
 
-            logger.LogMatchedRoute(context.Request.Path, downstream.DownstreamUri);
+            route = CreateMatchedDownstreamRoute(context, loomRoute);
 
-            return downstream;
+            logger.LogMatchedRoute(context.Request.Path, route.DownstreamUri);
+
+            return true;
         }
 
-        private LoomRoute GetLoomRoute(HttpContext context)
+        private bool TryGetLoomRoute(HttpContext context, out LoomRoute route)
         {
+            route = default;
+
             // Unsure what scenario this would occur, but its easy enough
             // to check and handle the rare case.
             if (!context.Request.Path.HasValue)
@@ -42,7 +50,16 @@ namespace Loom.Net.AspNetCore.Services
                 matchablePath = matchablePath[configuration.RoutePrefix.Length..];
             }
 
-            return configuration.Routes.Single(x => x.PathTemplate == matchablePath);           
+            var routeIndex = configuration.Routes.FindIndex(x => x.PathTemplate == matchablePath);
+
+            if (routeIndex == -1)
+            {
+                return false;
+            }
+
+            route = configuration.Routes[routeIndex];
+
+            return true;
         }
 
         private LoomMatchedDownstreamRoute CreateMatchedDownstreamRoute(HttpContext context, LoomRoute route)

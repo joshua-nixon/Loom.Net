@@ -6,7 +6,7 @@ namespace Loom.Net.AspNetCore.Configuration
     {
         public readonly string RoutePrefix;
         public readonly string RoutePattern;
-        public readonly IReadOnlyList<LoomRoute> Routes;
+        public readonly List<LoomRoute> Routes;
 
         public LoomAspNetCoreConfiguration(string routePrefix, List<LoomRoute> routes)
         {
