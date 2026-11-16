@@ -13,7 +13,7 @@ namespace Loom.Net.AspNetCore.Extensions
             {
                 var options = application.Services.GetRequiredService<LoomAspNetCoreConfiguration>();
 
-                application.Map(options.RoutePattern, CatchEndpointHandler.HandleAsync);
+                application.Map(options.RoutePattern, LoomCatchAllEndpointHandler.HandleAsync);
 
                 return application;
             }

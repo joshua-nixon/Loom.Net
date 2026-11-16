@@ -11,7 +11,7 @@ namespace Loom.Net.AspNetCore.Services
         LoomAspNetCoreConfiguration configuration,
         ILogger<LoomDownstreamMatcher> logger)
     {
-        public MatchedDownstreamRoute GetDownstream(HttpContext context)
+        public LoomMatchedDownstreamRoute GetDownstream(HttpContext context)
         {
             var loomRoute = GetLoomRoute(context);
 
@@ -45,7 +45,7 @@ namespace Loom.Net.AspNetCore.Services
             return configuration.Routes.Single(x => x.PathTemplate == matchablePath);           
         }
 
-        private MatchedDownstreamRoute CreateMatchedDownstreamRoute(HttpContext context, LoomRoute route)
+        private LoomMatchedDownstreamRoute CreateMatchedDownstreamRoute(HttpContext context, LoomRoute route)
         {
             var downstreamPath = $"{route.Scheme}://{route.Backend.Host}:{route.Backend.Port}/{route.UpstreamPathTemplate}";
 
@@ -57,7 +57,7 @@ namespace Loom.Net.AspNetCore.Services
 
             var downstreamUri = new Uri(downstreamPath);
 
-            return new MatchedDownstreamRoute(context, downstreamUri);
+            return new LoomMatchedDownstreamRoute(context, downstreamUri);
         }
     }
 }

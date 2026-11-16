@@ -19,7 +19,7 @@ namespace Loom.Net.AspNetCore.Services
             _messageInvoker = new HttpMessageInvoker(handler, disposeHandler: true);
         }
 
-        public async Task ForwardAsync(MatchedDownstreamRoute downstreamRoute)
+        public async Task ForwardAsync(LoomMatchedDownstreamRoute downstreamRoute)
         {
             var request = downstreamRoute.Context.Request;
             var cancellationToken = downstreamRoute.Context.RequestAborted;

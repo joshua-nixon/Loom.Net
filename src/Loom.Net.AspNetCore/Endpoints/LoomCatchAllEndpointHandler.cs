@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace Loom.Net.AspNetCore.Endpoints
 {
-    internal static class CatchEndpointHandler
+    internal static class LoomCatchAllEndpointHandler
     {
         public static async ValueTask HandleAsync(
             HttpContext context,
