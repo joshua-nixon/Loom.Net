@@ -21,4 +21,6 @@ app.UseLoom();
 
 app.MapGet("helloworld", () => "Hello World!");
 
+app.MapGet("echo", (string message) => message);
+
 app.Run();
