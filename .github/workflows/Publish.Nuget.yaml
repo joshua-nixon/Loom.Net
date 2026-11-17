@@ -23,15 +23,15 @@ jobs:
         with:
           dotnet-version: '11.x.x'
 
-      - name: Restore Dependencies
+      - name: Restore dependencies
         working-directory: ./src
         run: dotnet restore Loom.Net.slnx
 
-      - name: Build Solution
+      - name: Build solution
         working-directory: ./src
         run: dotnet build Loom.Net.slnx -c Release --no-restore
 
-      - name: Run Tests
+      - name: Run tests
         working-directory: ./src
         run: dotnet test Loom.Net.slnx -c Release --no-build
 

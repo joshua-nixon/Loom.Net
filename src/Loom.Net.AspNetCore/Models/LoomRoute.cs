@@ -1,9 +1,11 @@
-﻿namespace Loom.Net.AspNetCore.Models
+﻿using System.Text.RegularExpressions;
+
+namespace Loom.Net.AspNetCore.Models
 {
     internal readonly record struct LoomRoute(
         string UpstreamPathTemplate,
-        string PathTemplate,
-        LoomBackend Backend
+        LoomBackend Backend,
+        Regex CompiledPathTemplate
     )
     {
         public string Scheme { get; } = "http";
