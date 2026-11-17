@@ -53,7 +53,7 @@ namespace Loom.Net.AspNetCore.Configuration
 
             return new Regex(
                 $@"\A{normlizedPathTemplate}\z",
-                RegexOptions.Compiled | RegexOptions.IgnoreCase, 
+                RegexOptions.Compiled | RegexOptions.IgnoreCase,
                 TimeSpan.FromSeconds(1)
             );
         }

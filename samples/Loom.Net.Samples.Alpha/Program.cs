@@ -25,5 +25,4 @@ app.MapGet("echo", (string message) => message);
 
 app.MapGet("user", (int id) => $"User {id}");
 
-
 app.Run();

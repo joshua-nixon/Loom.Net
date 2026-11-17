@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.RegularExpressions;
 using Loom.Net.AspNetCore.Configuration;
@@ -27,7 +27,7 @@ namespace Loom.Net.AspNetCore.Services
 
             var matchablePath = GetNormalisedRequestPath(context);
 
-            if (!TryGetMatchedRoute(matchablePath, out var foundRoute, out var foundMatch)) 
+            if (!TryGetMatchedRoute(matchablePath, out var foundRoute, out var foundMatch))
             {
                 return false;
             }
@@ -40,7 +40,7 @@ namespace Loom.Net.AspNetCore.Services
         }
 
         private bool TryGetMatchedRoute(
-            string path, 
+            string path,
             out LoomRoute matched,
             [NotNullWhen(true)] out Match? match)
         {
@@ -93,24 +93,17 @@ namespace Loom.Net.AspNetCore.Services
         }
 
         private static LoomMatchedDownstreamRoute CreateMatchedDownstreamRoute(
-            HttpContext context, 
-            LoomRoute route, 
+            HttpContext context,
+            LoomRoute route,
             Match capturedMatch)
         {
-            var downstreamPath = CreateDownstreamUrl(route, capturedMatch);
+            var builder = CreateDownstreamUri(route, capturedMatch)
+                .MergeQueryString(context.Request.Query);
 
-            // Optionally add the query string to the downstream path.
-            if (context.Request.QueryString.HasValue)
-            {
-                downstreamPath += context.Request.QueryString.Value;
-            }
-
-            var downstreamUri = new Uri(downstreamPath);
-
-            return new LoomMatchedDownstreamRoute(context, downstreamUri);
+            return new LoomMatchedDownstreamRoute(context, builder.Uri);
         }
 
-        private static string CreateDownstreamUrl(LoomRoute route, Match capturedMatch)
+        private static UriBuilder CreateDownstreamUri(LoomRoute route, Match capturedMatch)
         {
             var stringBuilder = new StringBuilder(route.UpstreamPathTemplate);
 
@@ -125,7 +118,15 @@ namespace Loom.Net.AspNetCore.Services
                 stringBuilder.Replace($"{{{grp.Name}}}", grp.Value);
             }
 
-            return $"{route.Scheme}://{route.Backend.Host}:{route.Backend.Port}/{stringBuilder}";
+            var upstreamPathAndQuery = stringBuilder.ToString();
+
+            // I would have wanted to use the UriBuilder here directly, but
+            // it required splitting the path and query string, which seemed brittle and error-prone.
+            // So instead, we just create a Uri and then use the UriBuilder to wrap it.
+
+            var downstreamUri = new Uri($"{route.Scheme}://{route.Backend.Host}:{route.Backend.Port}/{upstreamPathAndQuery}");
+
+            return new UriBuilder(downstreamUri);
         }
     }
 }

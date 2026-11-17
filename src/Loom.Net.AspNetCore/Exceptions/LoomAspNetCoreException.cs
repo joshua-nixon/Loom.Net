@@ -4,7 +4,7 @@
     {
         protected LoomAspNetCoreException(string message) : base(message)
         {
-            
+
         }
     }
 }
