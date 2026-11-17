@@ -1,11 +1,10 @@
-﻿using System.Text.RegularExpressions;
-using Loom.Net.AspNetCore.Common;
+﻿using Loom.Net.AspNetCore.Common;
 using Loom.Net.AspNetCore.Exceptions;
 using Loom.Net.AspNetCore.Models;
 
 namespace Loom.Net.AspNetCore.Configuration
 {
-    public sealed partial class LoomAspNetCoreConfigurationBuilder
+    public sealed class LoomAspNetCoreConfigurationBuilder
     {
         public string RoutePrefix { get; internal set; } = string.Empty;
 
@@ -36,32 +35,12 @@ namespace Loom.Net.AspNetCore.Configuration
                     new LoomRoute(
                         PathTemplateHelper.NormalizePathParameters(route.Upstream.PathTemplate),
                         backend,
-                        CompilePathTemplate(PathTemplateHelper.NormalizePathParameters(route.PathTemplate))
+                        PathTemplateHelper.CompilePathTemplate(route.PathTemplate)
                     )
                 );
             }
 
             return routes;
         }
-
-        private static Regex CompilePathTemplate(string normlizedPathTemplate)
-        {
-            // Replace the basic group i.e {user-id} with a named group that will match
-            // any non-slash characters, e.g. (?<user-id>[^/]+)
-
-            normlizedPathTemplate = GroupCaptureRegex.Replace(normlizedPathTemplate, "(?<$1>[^/]+)");
-
-            return new Regex(
-                $@"\A{normlizedPathTemplate}\z",
-                RegexOptions.Compiled | RegexOptions.IgnoreCase,
-                TimeSpan.FromSeconds(1)
-            );
-        }
-
-        /// <summary>
-        /// Captures patterns within parenthesis, e.g. {user-id} in the path template /users/{user-id}
-        /// </summary>
-        [GeneratedRegex(@"\{([^}]+)\}")]
-        private static partial Regex GroupCaptureRegex { get; }
     }
 }

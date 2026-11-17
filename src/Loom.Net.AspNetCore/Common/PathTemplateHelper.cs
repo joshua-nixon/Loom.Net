@@ -25,5 +25,21 @@ namespace Loom.Net.AspNetCore.Common
                 return $"{{{validGroupName}}}";
             });
         }
+
+        public static Regex CompilePathTemplate(string pathTemplate)
+        {
+            // Replace the basic group i.e {user-id} with a named group that will match
+            // any non-slash characters, e.g. (?<user-id>[^/]+)
+
+            pathTemplate = NormalizePathParameters(pathTemplate);
+
+            pathTemplate = GroupCaptureRegex.Replace(pathTemplate, "(?<$1>[^/]+)");
+
+            return new Regex(
+                $@"\A{pathTemplate}\z",
+                RegexOptions.Compiled | RegexOptions.IgnoreCase,
+                TimeSpan.FromSeconds(1)
+            );
+        }
     }
 }
