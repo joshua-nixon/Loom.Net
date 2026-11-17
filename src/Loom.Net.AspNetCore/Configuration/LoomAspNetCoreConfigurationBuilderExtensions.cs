@@ -6,13 +6,13 @@ namespace Loom.Net.AspNetCore.Configuration
 {
     public static class LoomAspNetCoreConfigurationBuilderExtensions
     {
-        extension (LoomAspNetCoreConfigurationBuilder builder)
+        extension(LoomAspNetCoreConfigurationBuilder builder)
         {
             public LoomAspNetCoreConfigurationBuilder LoadFromConfiguration(IConfiguration configuration)
             {
                 var section = configuration.GetSection("Loom");
 
-                var loomConfiguration = section.Get<LoomJsonConfiguration>() 
+                var loomConfiguration = section.Get<LoomJsonConfiguration>()
                     ?? throw new LoomAspNetCoreInvalidOperationException($"Failed to load Loom configuration from section '{section.Path}'");
 
                 builder.RoutePrefix = loomConfiguration.RoutePrefix;

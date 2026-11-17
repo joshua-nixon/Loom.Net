@@ -3,10 +3,6 @@ name: Publish.Nuget
 on:
   workflow_dispatch:   
   
-  push:
-    branches:
-      - master
-  
 permissions:
   id-token: write
   contents: read
@@ -23,23 +19,26 @@ jobs:
         with:
           dotnet-version: '11.x.x'
 
-      - name: Restore Dependencies
-        working-directory: ./src
+      - name: Restore dependencies
         run: dotnet restore Loom.Net.slnx
 
-      - name: Build Solution
-        working-directory: ./src
+      - name: Build solution
         run: dotnet build Loom.Net.slnx -c Release --no-restore
 
-      - name: Run Tests
-        working-directory: ./src
-        run: dotnet test Loom.Net.slnx -c Release --no-build
+      - name: Run tests
+        env:
+          DOTNET_TEST_RUNNER: Microsoft.Testing.Platform
+        run: |
+          dotnet test Loom.Net.slnx \
+            --no-build \
+            --no-restore \
+            -c Release
 
       - name: Pack 'Loom.Net.AspNetCore'
-        working-directory: ./src
         run: |         
-          dotnet pack Loom.Net.AspNetCore/Loom.Net.AspNetCore.csproj \
+          dotnet pack src/Loom.Net.AspNetCore/Loom.Net.AspNetCore.csproj \
             --no-build \
+            --no-restore \
             -c Release \
             -o ./dist
 
@@ -49,7 +48,6 @@ jobs:
           user: ${{ secrets.NUGET_USER }}
 
       - name: Push to NuGet.org
-        working-directory: ./src
         run: |
           dotnet nuget push "./dist/*.nupkg" \
             --api-key ${{ steps.login.outputs.NUGET_API_KEY }}  \

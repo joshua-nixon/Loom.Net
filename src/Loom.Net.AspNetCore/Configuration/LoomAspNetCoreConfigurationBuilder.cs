@@ -1,4 +1,5 @@
-﻿using Loom.Net.AspNetCore.Exceptions;
+﻿using Loom.Net.AspNetCore.Common;
+using Loom.Net.AspNetCore.Exceptions;
 using Loom.Net.AspNetCore.Models;
 
 namespace Loom.Net.AspNetCore.Configuration
@@ -32,9 +33,9 @@ namespace Loom.Net.AspNetCore.Configuration
 
                 routes.Add(
                     new LoomRoute(
-                        route.Upstream.PathTemplate,
-                        route.PathTemplate,
-                        backend
+                        PathTemplateHelper.NormalizePathParameters(route.Upstream.PathTemplate),
+                        backend,
+                        PathTemplateHelper.CompilePathTemplate(route.PathTemplate)
                     )
                 );
             }

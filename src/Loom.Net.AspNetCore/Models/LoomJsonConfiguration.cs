@@ -1,7 +1,7 @@
 ﻿namespace Loom.Net.AspNetCore.Models
 {
     internal sealed record LoomJsonConfiguration(
-        IReadOnlyList<LoomJsonRoute> Routes, 
+        IReadOnlyList<LoomJsonRoute> Routes,
         IReadOnlyDictionary<string, LoomJsonBackend> Backends,
         string RoutePrefix = ""
     );

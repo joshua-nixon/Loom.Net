@@ -1,4 +1,6 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
+using System.Text;
+using System.Text.RegularExpressions;
 using Loom.Net.AspNetCore.Configuration;
 using Loom.Net.AspNetCore.Exceptions;
 using Loom.Net.AspNetCore.Extensions;
@@ -14,22 +16,6 @@ namespace Loom.Net.AspNetCore.Services
     {
         public bool TryGetDownstream(HttpContext context, [NotNullWhen(true)] out LoomMatchedDownstreamRoute? route)
         {
-            if (!TryGetLoomRoute(context, out var loomRoute))
-            {
-                route = default;
-
-                return false;
-            }
-
-            route = CreateMatchedDownstreamRoute(context, loomRoute);
-
-            logger.LogMatchedRoute(context.Request.Path, route.DownstreamUri);
-
-            return true;
-        }
-
-        private bool TryGetLoomRoute(HttpContext context, out LoomRoute route)
-        {
             route = default;
 
             // Unsure what scenario this would occur, but its easy enough
@@ -39,7 +25,60 @@ namespace Loom.Net.AspNetCore.Services
                 throw new LoomAspNetCoreInvalidOperationException("Cannot proceed as HttpContext.Request.Path is not set");
             }
 
-            var matchablePath = context.Request.Path.Value;
+            var matchablePath = GetNormalisedRequestPath(context);
+
+            if (!TryGetMatchedRoute(matchablePath, out var foundRoute, out var foundMatch))
+            {
+                return false;
+            }
+
+            route = CreateMatchedDownstreamRoute(context, foundRoute, foundMatch);
+
+            logger.LogMatchedRoute(context.Request.Path, route.DownstreamUri);
+
+            return true;
+        }
+
+        private bool TryGetMatchedRoute(
+            string path,
+            out LoomRoute matched,
+            [NotNullWhen(true)] out Match? match)
+        {
+            LoomRoute? foundRoute = null;
+
+            match = null;
+
+            // Since we check for duplicate routes, each request will iterate over the full array.
+            // Can this be optimised?
+
+            foreach (var route in configuration.Routes)
+            {
+                // Careful! Match is set before foundRoute is set, so if an exception is raised
+                // the link between match and route will not be correct.
+                match = route.CompiledPathTemplate.Match(path);
+
+                if (!match.Success)
+                {
+                    continue;
+                }
+
+                // If we have already matched a route, then we have a conflict and should throw an exception.
+                if (foundRoute.HasValue)
+                {
+                    throw new LoomAspNetCoreInvalidOperationException($"Multiple routes matched the path '{path}'. Please ensure that your route templates are unique.");
+                }
+
+                foundRoute = route;
+            }
+
+            matched = foundRoute.GetValueOrDefault();
+
+            return foundRoute.HasValue;
+        }
+
+        private string GetNormalisedRequestPath(HttpContext context)
+        {
+            var matchablePath = context.Request.Path.Value!;
 
             // Strip the prefix.
             // Only need to perform a substring if we have a non-empty prefix
@@ -50,31 +89,44 @@ namespace Loom.Net.AspNetCore.Services
                 matchablePath = matchablePath[configuration.RoutePrefix.Length..];
             }
 
-            var routeIndex = configuration.Routes.FindIndex(x => x.PathTemplate == matchablePath);
-
-            if (routeIndex == -1)
-            {
-                return false;
-            }
-
-            route = configuration.Routes[routeIndex];
-
-            return true;
+            return matchablePath;
         }
 
-        private LoomMatchedDownstreamRoute CreateMatchedDownstreamRoute(HttpContext context, LoomRoute route)
+        private static LoomMatchedDownstreamRoute CreateMatchedDownstreamRoute(
+            HttpContext context,
+            LoomRoute route,
+            Match capturedMatch)
         {
-            var downstreamPath = $"{route.Scheme}://{route.Backend.Host}:{route.Backend.Port}/{route.UpstreamPathTemplate}";
+            var builder = CreateDownstreamUri(route, capturedMatch)
+                .MergeQueryString(context.Request.Query);
 
-            // Optionally add the query string to the downstream path.
-            if (context.Request.QueryString.HasValue)
+            return new LoomMatchedDownstreamRoute(context, builder.Uri);
+        }
+
+        private static UriBuilder CreateDownstreamUri(LoomRoute route, Match capturedMatch)
+        {
+            var stringBuilder = new StringBuilder(route.UpstreamPathTemplate);
+
+            foreach (var grp in capturedMatch.Groups.Cast<Group>())
             {
-                downstreamPath += context.Request.QueryString.Value;
+                // Skip the 0th group, which is the entire match, and any unnamed groups.
+                if (!grp.Success || string.IsNullOrWhiteSpace(grp.Name) || grp.Name == "0")
+                {
+                    continue;
+                }
+
+                stringBuilder.Replace($"{{{grp.Name}}}", grp.Value);
             }
 
-            var downstreamUri = new Uri(downstreamPath);
+            var upstreamPathAndQuery = stringBuilder.ToString();
 
-            return new LoomMatchedDownstreamRoute(context, downstreamUri);
+            // I would have wanted to use the UriBuilder here directly, but
+            // it required splitting the path and query string, which seemed brittle and error-prone.
+            // So instead, we just create a Uri and then use the UriBuilder to wrap it.
+
+            var downstreamUri = new Uri($"{route.Scheme}://{route.Backend.Host}:{route.Backend.Port}/{upstreamPathAndQuery}");
+
+            return new UriBuilder(downstreamUri);
         }
     }
 }
