@@ -23,7 +23,7 @@ app.MapGet("helloworld", () => "Hello World!");
 
 app.MapGet("echo", (string message) => message);
 
-app.MapGet("user/{userId:int}", (int userId) => $"User {userId}");
+app.MapGet("user", (int id) => $"User {id}");
 
 
 app.Run();

@@ -1,7 +1,7 @@
 ﻿using System.Text.RegularExpressions;
+using Loom.Net.AspNetCore.Common;
 using Loom.Net.AspNetCore.Exceptions;
 using Loom.Net.AspNetCore.Models;
-using Microsoft.Extensions.FileSystemGlobbing.Internal;
 
 namespace Loom.Net.AspNetCore.Configuration
 {
@@ -34,9 +34,9 @@ namespace Loom.Net.AspNetCore.Configuration
 
                 routes.Add(
                     new LoomRoute(
-                        route.Upstream.PathTemplate,
+                        PathTemplateHelper.NormalizePathParameters(route.Upstream.PathTemplate),
                         backend,
-                        CompilePathTemplate(route.PathTemplate)
+                        CompilePathTemplate(PathTemplateHelper.NormalizePathParameters(route.PathTemplate))
                     )
                 );
             }
@@ -44,30 +44,15 @@ namespace Loom.Net.AspNetCore.Configuration
             return routes;
         }
 
-        private static string NormalisePathTemplate(string pathTemplate)
+        private static Regex CompilePathTemplate(string normlizedPathTemplate)
         {
-            // C# does not allow hyphens in named groups,
-            // so we need to replace any hyphens with underscores.
-            return GroupCaptureRegex.Replace(pathTemplate, m =>
-            {
-                var paramName = m.Groups[1].Value;
-
-                var validGroupName = paramName.Replace("-", "_");
-
-                return $"(?<{validGroupName}>[^/]+)";
-            });
-        }
-
-        private static Regex CompilePathTemplate(string pathTemplate)
-        {
-            pathTemplate = NormalisePathTemplate(pathTemplate);
-
             // Replace the basic group i.e {user-id} with a named group that will match
             // any non-slash characters, e.g. (?<user-id>[^/]+)
-            pathTemplate = GroupCaptureRegex.Replace(pathTemplate, "(?<$1>[^/]+)");
+
+            normlizedPathTemplate = GroupCaptureRegex.Replace(normlizedPathTemplate, "(?<$1>[^/]+)");
 
             return new Regex(
-                pathTemplate, 
+                normlizedPathTemplate, 
                 RegexOptions.Compiled | RegexOptions.IgnoreCase, 
                 TimeSpan.FromSeconds(1)
             );

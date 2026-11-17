@@ -122,9 +122,7 @@ namespace Loom.Net.AspNetCore.Services
                     continue;
                 }
 
-                var groupName = grp.Name.Replace("_", "-");
-
-                stringBuilder.Replace($"{{{groupName}}}", grp.Value);
+                stringBuilder.Replace($"{{{grp.Name}}}", grp.Value);
             }
 
             return $"{route.Scheme}://{route.Backend.Host}:{route.Backend.Port}/{stringBuilder}";
