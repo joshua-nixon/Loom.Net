@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Loom.Net.AspNetCore.Common
 {
@@ -26,17 +27,37 @@ namespace Loom.Net.AspNetCore.Common
             });
         }
 
+        /// <summary>
+        /// Compiles a path template into a case-insensitive regex with named captures for its parameters.
+        /// </summary>
         public static Regex CompilePathTemplate(string pathTemplate)
         {
-            // Replace the basic group i.e {user-id} with a named group that will match
-            // any non-slash characters, e.g. (?<user-id>[^/]+)
-
             pathTemplate = NormalizePathParameters(pathTemplate);
 
-            pathTemplate = GroupCaptureRegex.Replace(pathTemplate, "(?<$1>[^/]+)");
+            var patternBuilder = new StringBuilder(@"\A");
+            var lastTemplateIndex = 0;
+
+            foreach (Match placeholder in GroupCaptureRegex.Matches(pathTemplate))
+            {
+                // Escape literal text so regex characters in the template match themselves.
+                patternBuilder.Append(Regex.Escape(pathTemplate[lastTemplateIndex..placeholder.Index]));
+
+                // Each placeholder becomes a named capture for one non-empty path segment.
+                patternBuilder
+                    .Append("(?<")
+                    .Append(placeholder.Groups[1].Value)
+                    .Append(@">[^/]+)");
+
+                lastTemplateIndex = placeholder.Index + placeholder.Length;
+            }
+
+            // Escape the final literal segment and require the regex to consume the entire path.
+            patternBuilder
+                .Append(Regex.Escape(pathTemplate[lastTemplateIndex..]))
+                .Append(@"\z");
 
             return new Regex(
-                $@"\A{pathTemplate}\z",
+                patternBuilder.ToString(),
                 RegexOptions.Compiled | RegexOptions.IgnoreCase,
                 TimeSpan.FromSeconds(1)
             );

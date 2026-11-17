@@ -67,6 +67,29 @@ public sealed class LoomDownstreamMatcherTests
     }
 
     [Fact]
+    public void TryGetDownstream_TreatsRegexCharactersAsLiterals()
+    {
+        var matcher = LoomDownstreamMatcherHelper.CreateFromRoutes(
+            ("version/v1.0", "version/v1.0")
+        );
+
+        var context = new DefaultHttpContext();
+        context.Request.Path = "/api/version/v1x0";
+
+        var matched = matcher.TryGetDownstream(context, out var route);
+
+        Assert.False(matched);
+        Assert.Null(route);
+
+        context.Request.Path = "/api/version/v1.0";
+
+        matched = matcher.TryGetDownstream(context, out route);
+
+        Assert.True(matched);
+        Assert.NotNull(route);
+    }
+
+    [Fact]
     public void TryGetDownstream_ThrowsWhenMultipleRoutesMatch()
     {
         var matcher = LoomDownstreamMatcherHelper.CreateFromRoutes(
