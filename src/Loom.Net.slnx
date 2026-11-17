@@ -1,6 +1,5 @@
 <Solution>
-  <Folder Name="/Samples/">
-    <Project Path="samples/Loom.Net.Samples.Alpha/Loom.Net.Samples.Alpha.csproj" />
-  </Folder>
+  <Project Path="../samples/Loom.Net.Samples.Alpha/Loom.Net.Samples.Alpha.csproj" />
+  <Project Path="../tests/Loom.Net.AspNetCore.Tests/Loom.Net.AspNetCore.Tests.csproj" />
   <Project Path="Loom.Net.AspNetCore/Loom.Net.AspNetCore.csproj" />
 </Solution>

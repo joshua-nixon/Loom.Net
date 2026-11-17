@@ -10,7 +10,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\Loom.Net.AspNetCore\Loom.Net.AspNetCore.csproj" />
+		<ProjectReference Include="..\..\src\Loom.Net.AspNetCore\Loom.Net.AspNetCore.csproj" />
 	</ItemGroup>
 
 </Project>

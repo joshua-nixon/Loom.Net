@@ -52,7 +52,7 @@ namespace Loom.Net.AspNetCore.Configuration
             normlizedPathTemplate = GroupCaptureRegex.Replace(normlizedPathTemplate, "(?<$1>[^/]+)");
 
             return new Regex(
-                normlizedPathTemplate, 
+                $@"\A{normlizedPathTemplate}\z",
                 RegexOptions.Compiled | RegexOptions.IgnoreCase, 
                 TimeSpan.FromSeconds(1)
             );
